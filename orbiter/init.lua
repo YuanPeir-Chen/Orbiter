@@ -2,7 +2,7 @@
 -- Very much inspired by Orbit, with a little webserver borrowed from Webrocks
 
 local socket = require 'socket.core'
-
+local json = require 'orbiter.libs.json'
 local _M = {}  --- our module
 local DIRSEP = package.config:sub(1,1)
 local Windows = DIRSEP == '\\'
@@ -323,6 +323,7 @@ end
 
 local mime_types = {
     other = 'text/plain',
+	json ="application/json",
 	ez = "application/andrew-inset",
 	atom = "application/atom+xml",
 	hqx = "application/mac-binhex40",
@@ -681,6 +682,7 @@ function MT:run(...)
     local addr = flags['addr'] or 'localhost'
     local port = flags['port'] or '8080'
 
+    local ct = flags['ct'] or mime_types.html
     local fake = flags['test']
     local testing = flags['no_headers'] and fake
     last_obj = self
@@ -747,6 +749,21 @@ function MT:run(...)
                     url,vars = file:match('([^%?]+)%?(.+)')
                     if url then file = url end
                 end
+                -- Support JSON Format
+                if ct == 'application/json' then
+               		-- print(vars)
+	                json_data = json:decode(vars)
+	                vars=''
+        	        for k,v in pairs(json_data) 
+                	do 
+                		--print(k,v)
+                		if (string.len(vars) >0 ) then
+                			vars = vars .. '&'
+                		end
+	                	vars= vars .. k .. '=' .. v
+        	        end
+                	-- print(vars)
+                end
                 vars = vars and url_split(vars) or {}
 				-- setup the web object
 				web = Web:new{ vars = headers, input = vars, method = method:lower(), path_info = file }
@@ -754,11 +771,13 @@ function MT:run(...)
 
                 file, obj = process_request_filters(web,file)
                 action, captures, obj = match_patterns(method, file, obj)
+                --for k,v in ipairs(captures) do print(k,v) end
+                --for k,v in pairs(obj) do print(k,v) end
+                --print(action)
                 if action then
                     -- @doc handlers may specify the MIME type of what they
                     -- return, if they choose; default is HTML.
                     local status, content, mime = pcall(action, obj, web, unpack(captures))
-
                     if status then
                         if not content and method ~= 'POST' then
                             status = false
@@ -776,9 +795,10 @@ function MT:run(...)
                             -- return the same.
                             if self.content_filter then
                                 content, mime = self:content_filter(content, mime)
-							end
+	                        end
+                            -- for k,v in pairs(content) do print(k,v) end
                             if not testing then
-                                send_headers(client, web.status, mime or 'text/html', #content, web.headers)
+                                send_headers(client, web.status, mime or ct, #content, web.headers)
                             end
                             client:send(content)
                         else
