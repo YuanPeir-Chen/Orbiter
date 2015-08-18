@@ -17,6 +17,7 @@ local function make_list(t)
    return table.concat(res,'\n')
 end
 
+local results2 ='{"Name":"JSON", "Key":"key"}'
 
 function form:results(web)
    -- local vars_list = make_list(web.input) -- for POST; use web.GET for GET
@@ -24,6 +25,6 @@ function form:results(web)
    return json { body = results}
 end
 
-form:dispatch_post(form.results,'/result')
+form:dispatch_post(form.result2,'/result')
 
 form:run(f.GetIP(), '--ct=application/json')
