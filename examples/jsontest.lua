@@ -22,7 +22,7 @@ local results2 ='{"Name":"JSON", "Key":"key"}'
 function form:results(web)
    -- local vars_list = make_list(web.input) -- for POST; use web.GET for GET
    local headers = make_list(web.vars)
-   return json { body = results}
+   return json { body = results2}
 end
 
 form:dispatch_post(form.result2,'/result')
