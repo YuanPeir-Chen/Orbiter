@@ -25,6 +25,6 @@ function form:results(web)
    return json { body = results2}
 end
 
-form:dispatch_post(form.result2,'/result')
+form:dispatch_post(form.results,'/result')
 
 form:run(f.GetIP(), '--ct=application/json')
